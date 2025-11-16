@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤝 AI Konsensus: Penentu Pemungutan Suara</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f4f7f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result, #individual-results {
+            margin-top: 30px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #e9ecef;
+        }
+        .range-value {
+            font-weight: bold;
+            float: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤝 AI Konsensus: Penentu Pemungutan Suara</h1>
+        <p>Aplikasi ini menggunakan JavaScript untuk mengirim data ke Backend Python AI Konsensus.</p>
+        
+        <form id="consensus-form">
+            
+            <div class="input-group">
+                <label for="umur">Umur (Tahun): <span id="umur-val" class="range-value">30</span></label>
+                <input type="range" id="umur" name="Umur" min="18" max="70" value="30" oninput="document.getElementById('umur-val').innerText = this.value">
+            </div>
+
+            <div class="input-group">
+                <label for="tidur">Jam Tidur Rata-Rata (Jam): <span id="tidur-val" class="range-value">7</span></label>
+                <input type="range" id="tidur" name="Jam_Tidur" min="4" max="10" value="7" oninput="document.getElementById('tidur-val').innerText = this.value">
+            </div>
+
+            <div class="input-group">
+                <label for="kafein">Level Kafein Harian (Skala 0-7): <span id="kafein-val" class="range-value">3</span></label>
+                <input type="range" id="kafein" name="Level_Kafein" min="0" max="7" value="3" oninput="document.getElementById('kafein-val').innerText = this.value">
+            </div>
+            
+            <button type="submit">Tentukan Konsensus</button>
+        </form>
+
+        <div id="result">
+            <strong>Keputusan Konsensus:</strong> Menunggu input...
+        </div>
+
+        <div id="individual-results">
+            <strong>Kontribusi Individual:</strong>
+            <ul>
+                <li>Model 1 (Linear): -</li>
+                <li>Model 2 (Pohon Keputusan): -</li>
+                <li>Model 3 (Linear Varian): -</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('consensus-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const umur = document.getElementById('umur').value;
+            const tidur = document.getElementById('tidur').value;
+            const kafein = document.getElementById('kafein').value;
+            
+            const data = {
+                Umur: parseInt(umur),
+                Jam_Tidur: parseInt(tidur),
+                Level_Kafein: parseInt(kafein)
+            };
+            
+            // **GANTI URL ini dengan URL API Python Anda!**
+            const API_URL = 'http://127.0.0.1:8000/predict'; 
+
+            document.getElementById('result').innerHTML = '<strong>Keputusan Konsensus:</strong> Memproses...';
+
+            // Mengirim data ke API Backend (Asumsi FastAPI/Flask)
+            fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Menampilkan hasil konsensus
+                const prediction = data.final_prediction;
+                const proba = data.consensus_proba;
+                document.getElementById('result').innerHTML = `
+                    <strong>Keputusan Konsensus:</strong> ${prediction} 
+                    (Probabilitas: ${proba.toFixed(2)})
+                `;
+
+                // Menampilkan hasil individual
+                const individualHtml = `
+                    <strong>Kontribusi Individual (Probabilitas Suka Kopi):</strong>
+                    <ul>
+                        <li>Model 1 (Linear): ${data.individual_preds.lr.toFixed(2)}</li>
+                        <li>Model 2 (Pohon Keputusan): ${data.individual_preds.dt.toFixed(2)}</li>
+                        <li>Model 3 (Linear Varian): ${data.individual_preds.lr_slow.toFixed(2)}</li>
+                    </ul>
+                `;
+                document.getElementById('individual-results').innerHTML = individualHtml;
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = '<strong>Error:</strong> Gagal terhubung ke AI Konsensus API. Pastikan API berjalan di ' + API_URL;
+            });
+        });
+    </script>
+</body>
+</html>
